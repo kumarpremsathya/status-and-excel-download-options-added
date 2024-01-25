@@ -1,0 +1,234 @@
+{% load static %}
+
+<!Doctype HTML>
+	<html>
+	<head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+		{% comment %} <link rel="stylesheet" href="css/style.css" type="text/css"/> {% endcomment %}
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <script type="text/javascript" src="{% static 'js/script.js' %}"></script>
+        <style>
+    
+          </style>
+	</head>
+
+
+	<body>
+		
+	<div id="mySidenav" class="sidenav">
+        <div class="Home" >
+            {% comment %} <img src="{% static 'image/home.png' %}"class="home-img"> {% endcomment %}
+             <a href="{% url 'table_details2'  %}"><i class="fa fa-home aria-hidden="true"></i> HOME</a> 
+             <P><a class="links" href="{% url 'rbinewhome' %}">   Probe Agile Data</a></p>
+            <span><a class="links" href="{% url 'table_details2'  %}"> Market Data  </a></span>  
+
+       </div>
+        <p class="Datas">Data Sources</p><hr>
+        <!-- Add a class to each data source link -->
+        <a href="{% url 'rbinewfema_datefilter' %}" class="icon-a"><i class="fa fa-list icons"></i>  RBI_Fema</a>
+        <a href="{% url 'rbinewecb_datefilter' %}" class="icon-a"><i class="fa fa-list icons"></i>   RBI_Ecb</a>
+        <a href="{% url 'rbinewodi_datefilter' %}" class="icon-a"><i class="fa fa-list icons"></i>   RBI_Odi</a> 
+
+	</div>
+    
+	<div id="main">
+
+		<div class="head">
+			<div class="col-div-6">
+	            <span > Data Extraction Status for Probe Agile Data Sources</span>
+	        </div>
+		
+
+		<div class="clearfix"></div>
+	</div>
+
+		<div class="clearfix"></div>
+		<br/>
+		
+		
+		<div class="col-div-3">
+			<div class="box">
+                <P class="align">{{ table_name_filter }}</P>
+            <div style="text-align:center;" class="drop-down">
+				{% comment %} <P style="font-size:20px"> Start Date :&nbsp;"{{ min_date }}" &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;End Date :&nbsp; "{{ max_date }}" </p> {% endcomment %}
+                    <p>
+                        {% if start_date and end_date %}
+                            Start Date: {{ start_date }} | End Date: {{ end_date }}
+                        {% elif past_15_days %}
+                            Start Date: {{ past_15_days.0 }} | End Date: {{ past_15_days.1 }}
+                        {% elif last_month %}
+                            Start Date: {{ last_month.0 }} | End Date: {{ last_month.1 }}
+                        {% endif %}
+                    </p>
+                
+
+          
+                   
+                    <!-- Custom date range filter -->
+                        <form  id="data-filter-form" method="get" method="get" onsubmit="return validateCustomDateRange()">
+                            {{ form.date_range }}
+                            <div id="custom-date-fields" style="display:none;">
+                                {{ form.start_date }}
+                                {{ form.end_date }}
+                            </div>
+                            <button type="submit">Apply</button>
+                        </form>
+                        <div id="error-message"></div> 
+                    </div> 
+                    
+                </div>
+			</div>
+           
+		</div>
+	
+	
+		<div class="clearfix"></div>
+		<br/><br/>
+		<div class="col-div-8" style="width:1585px; left:316px;">
+			<div class="box-8" style="height:570px;">
+			<div class="content-box">
+				{% comment %} <p>Historic Results for {{ table_name_filter }}</p> {% endcomment %}
+				<br/>
+				<table id="city-table" class="custom-table">
+                  
+                    <tr>
+                   
+                        <th>Status</th>
+                        <th>#Records Available</th>
+                        <th>#Records Scraped</th>
+                        <th>Failure Reason</th>
+                        <th>Scraped On</th>
+                    </tr>
+              
+                    <!-- Loop through your data and display rows -->
+                    {% for item in data %}
+                        <tr>
+                        
+                            <td style="color:{{ item.status_color }}">{{ item.script_status }}</td>
+                            <td >{{ item.data_available }}</td>
+                            <td style="color:{{ item.status_color }}">{{ item.data_scraped }}</td>
+                            <td style="color:{{ item.status_color }}">{{ item.failure_reason }}</td>
+                            <td>{{ item.date_of_scraping }}</td>
+            
+                        </tr>
+                    {% endfor %}
+               
+            </table>
+		</div>
+		</div>
+		</div>
+
+		<div class="clearfix"></div>
+	</div>
+    <div class="col-div-4">
+		<div class="box" style="text-align:center;">
+		
+            <p style="color: #f7403b;">Contact us for support : <a href="mailto:agiledatahelp@gmail.com"
+                style="color: #f7403b;"> agiledatahelp@gmail.com</a></p>		
+		</div>
+	</div>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+	<script>
+       
+        window.validateCustomDateRange = function() {
+        var dateRangeDropdown = document.getElementsByName('date_range')[0];
+        var startDateInput = document.getElementsByName('start_date')[0];
+        var endDateInput = document.getElementsByName('end_date')[0];
+        var errorMessage = document.getElementById('error-message');
+    
+        if (dateRangeDropdown.value === 'custom') {
+            // Check if both start date and end date are selected
+            if (!startDateInput.value || !endDateInput.value) {
+                errorMessage.textContent = 'Please select both start date and end date.';
+                return false;
+            }
+    
+            // Check if end date is today or earlier
+            var today = new Date().toISOString().split('T')[0];
+            if (endDateInput.value > today) {
+                errorMessage.textContent = 'End date cannot be later than today.';
+                return false;
+            }
+            
+            // Check if the start date is greater than the end date
+            var startDate = new Date(startDateInput.value);
+            var endDate = new Date(endDateInput.value);
+            if (startDate > endDate) {
+                errorMessage.textContent = 'Start date should not be greater than end date.';
+                return false;
+            }
+    
+
+            // Check if the date range exceeds 60 days
+            var startDate = new Date(startDateInput.value);
+            var endDate = new Date(endDateInput.value);
+            var sixtyDaysLater = new Date(startDate.getTime() + 60 * 24 * 60 * 60 * 1000);
+    
+            if (endDate > sixtyDaysLater) {
+                errorMessage.textContent = 'Date range for custom view cannot exceed 60 days.';
+                return false;
+            }
+    
+            // Hide the error message and display the table
+            errorMessage.textContent = '';
+            document.getElementById('city-table').style.display = 'table'; 
+        }
+    
+        return true;
+    };
+    
+    document.addEventListener('DOMContentLoaded', function () {
+        var customDateFields = document.getElementById('custom-date-fields');
+        var dateRangeDropdown = document.getElementsByName('date_range')[0];
+        var errorMessage = document.getElementById('error-message');
+    
+        // Initial check to show/hide custom date fields
+        toggleCustomDateFields();
+    
+        // Add event listener to the date range dropdown
+        dateRangeDropdown.addEventListener('change', toggleCustomDateFields);
+    
+        function toggleCustomDateFields() {
+            if (dateRangeDropdown.value === 'custom') {
+                customDateFields.style.display = 'block';
+                // Hide the table for the custom option until validated
+                document.getElementById('city-table').style.display = 'table';
+            } else {
+                customDateFields.style.display = 'none';
+                // Show the table for other options
+                document.getElementById('city-table').style.display = 'table';
+            }
+        }
+    });
+    
+    
+    // Highlighting the anchor tag links when we clicked with background colour greenyellow
+
+	function highlightSelectedTable() {
+		var selectedTable = "{{ table_name_filter }}";  // Assuming table_name is defined in your Django context
+		var tableLinks = document.querySelectorAll('[data-source]');
+	
+		tableLinks.forEach(function (link) {
+			if (link.getAttribute('data-source') === selectedTable) {
+				link.classList.add('highlight');
+				// Apply styles directly
+				link.style.backgroundColor = 'greenyellow';
+				link.style.fontWeight = 'bold';
+				// Add any other styles you want to apply
+			}
+		});
+	}
+	
+	// Call the function to highlight the selected table on page load
+	highlightSelectedTable();
+
+</script>
+
+</body>
+
+</html>
+
+

@@ -1,0 +1,199 @@
+{% load static %}
+<!Doctype HTML>
+	<html>
+	<head>
+        <link rel="stylesheet" href="./stylesheet.css" type="text/css"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+		<link rel="stylesheet" href="{% static './stylesheet.css' %}">
+		<script src="{% static 'script.js' %}"></script>
+	</head>
+	<body>
+		<div id="mySidenav" class="sidenav">
+			<a href="#">
+				<i class="fa fa-home" aria-hidden="true"></i>
+				<h2 style="display: inline; margin-left: 5px;">Home page</h2>
+			</a>
+		    <p class="logo"><span>Probe</span></p>
+        	<p class="logo"><span>Market Data</span></p>
+		    <p class="logo"><span>Data Source</span></p>
+              {% for table_name in table_names %}
+			  <a href="{% url 'table_details' table_name %}?table_names={{ table_names|join:',' }}">{{ table_name }}</a>
+              {% endfor %}
+	    </div>
+	<div id="main">
+		<div class="head">
+			<div class="col-div-6">
+	<span style="font-size:30px;cursor:pointer; color: white;" class="nav"  >☰ Dashboard Data extraction - Market data</span>
+	<span style="font-size:30px;cursor:pointer; color: white;" class="nav2"  >☰ Dashboard Data extraction - Market data</span>
+	</div>
+		
+	
+		<div class="clearfix"></div>
+	</div>
+
+		<div class="clearfix"></div>
+		<br/>
+		
+		
+		<div class="col-div-3">
+			<div class="box">
+				<div class="card">
+					<div style="text-align: center;">
+					<label for="time_range"class="label-styling">Select date Range:</label>
+					<select name="time_range" id="time_range_select" onchange="toggleDateInputs()">
+						<option value="15">Last 15 Days</option>
+						<option value="30">Last 30 Days</option>
+						<option value="custom">Date Range</option>
+					</select>
+				
+					<!-- Hidden form for date range -->
+					<form id="date_range_form" method="GET" action="" style="display: none;">
+						<label for="from_date">From Date:</label>
+						<input type="date" name="from_date" id="from_date" value="{{ from_date }}">
+						<label for="to_date">To Date:</label>
+						<input type="date" name="to_date" id="to_date" value="{{ to_date }}">
+					</form>
+				
+					<!-- Submit button outside the form -->
+					<button type="button" onclick="setDefaultDates(); submitForm();">Filter</button>
+				</div>
+			</div>
+		</div>
+	</div>
+		<div class="clearfix"></div>
+		<br/><br/>
+		<div class="col-div-8">
+			<div class="box-8">
+			<div class="content-box">
+				<title>All Table Details</title>
+                        <h2><p class="glow-text"> <------ CHOOSE A FIELD FROM LIST </p></h2>
+                        <!-- Display data if table_data exists and the date range is selected -->
+                     <!-- Display data if table_data exists and the date range is selected -->
+{% if table_data %}
+<div class="card">
+    <h3>All Data for dates chosen</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Table Name</th>
+                {% if date_range %}
+                    {% for date in date_range %}
+                        <th>{{ date }}</th>
+                    {% endfor %}
+                {% else %}
+                    <th>No data available</th>
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for table_name in table_names %}
+                <tr>
+                    <td>{{ table_name }}</td>
+                    {% for entry in table_data %}
+                        {% if entry.table_name == table_name %}
+						<td class="{% if entry.no_of_data_scraped %}positive{% else %}negative{% endif %}">
+                                {% if entry.no_of_data_scraped %}
+                                    {{ entry.no_of_data_scraped }}
+                                {% else %}
+                                    {{ entry.reason }}
+                                {% endif %}
+                            </td>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </tbody>
+</div>
+{% else %}
+<p>No data found.</p>
+{% endif %}       
+	</table>
+		</div>
+		</div>
+		</div>
+
+		<div class="clearfix"></div>
+		<br/>
+
+		<div class="col-div-3">
+			<div class="box">
+				<p>Market Data Dashboard Support : Write to us @ <a href="mailto:probepoc2023@gmail.com"target="_blank" rel="noopener noreferrer" class="email-link">probepoc2023@gmail.com</a>
+					for any  queries with the data provided above.</p>
+			</div>
+		</div>
+
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script>
+	  $(".nav").click(function(){
+	    $("#mySidenav").css('width','70px');
+	    $("#main").css('margin-left','70px');
+	    $(".logo").css('visibility', 'hidden');
+	    $(".logo span").css('visibility', 'visible');
+	     $(".logo span").css('margin-left', '-10px');
+	     $(".icon-a").css('visibility', 'hidden');
+	     $(".icons").css('visibility', 'visible');
+	     $(".icons").css('margin-left', '-8px');
+	      $(".nav").css('display','none');
+	      $(".nav2").css('display','block');
+	  });
+
+	$(".nav2").click(function(){
+	    $("#mySidenav").css('width','300px');
+	    $("#main").css('margin-left','300px');
+	    $(".logo").css('visibility', 'visible');
+	     $(".icon-a").css('visibility', 'visible');
+	     $(".icons").css('visibility', 'visible');
+	     $(".nav").css('display','block');
+	      $(".nav2").css('display','none');
+	 });
+	 function toggleDateInputs() {
+		var timeRangeSelect = document.getElementById('time_range_select');
+		var dateRangeForm = document.getElementById('date_range_form');
+		var fromInput = document.getElementById('from_date');
+		var toInput = document.getElementById('to_date');
+
+		// Toggle the visibility of the date range inputs based on the selected option
+		if (timeRangeSelect.value === 'custom') {
+			dateRangeForm.style.display = 'block';
+			fromInput.required = true;
+			toInput.required = true;
+		} else {
+			dateRangeForm.style.display = 'none';
+			fromInput.required = false;
+			toInput.required = false;
+		}
+	}
+
+	// Function to set the from_date and to_date values based on the selected time range
+	function setDefaultDates() {
+		var timeRangeSelect = document.getElementById('time_range_select');
+		var fromInput = document.getElementById('from_date');
+		var toInput = document.getElementById('to_date');
+
+		if (timeRangeSelect.value === '15') {
+			// Set the from_date to 15 days ago and to_date to today
+			var fifteenDaysAgo = new Date();
+			fifteenDaysAgo.setDate(fifteenDaysAgo.getDate() - 15);
+			fromInput.value = fifteenDaysAgo.toISOString().split('T')[0];
+
+			var today = new Date();
+			toInput.value = today.toISOString().split('T')[0];
+		} else if (timeRangeSelect.value === '30') {
+			// Set the from_date to 30 days ago and to_date to today
+			var thirtyDaysAgo = new Date();
+			thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+			fromInput.value = thirtyDaysAgo.toISOString().split('T')[0];
+
+			var today = new Date();
+			toInput.value = today.toISOString().split('T')[0];
+		}
+	}
+	function submitForm() {
+		document.getElementById('date_range_form').submit();
+	}
+	</script>
+	</body>
+	</html>

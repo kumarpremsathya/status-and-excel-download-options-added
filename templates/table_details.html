@@ -1,0 +1,329 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'stylesheet.css' %}" type="text/css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+</head>
+<style>
+    .container{
+   display:grid;
+  grid-template-rows:8vh 19vh 63vh 10vh;
+  grid-template-columns:300px auto;
+   grid-template-areas: 
+   "one two two two"
+   "one three three three"
+   "one four four four "
+   "one five five five";
+   gap:10px;
+}
+.one{grid-area: one;}
+.two{grid-area: two;}
+.three{grid-area: three;}
+.four{grid-area: four;}
+.five{grid-area: five;}
+
+
+
+</style>
+<body>
+<div class="container">
+    <div class="one">
+    <div id="mySidenav" class="sidenav">
+        <a href="{% url 'table_details2' %}">
+            <i class="fa fa-home" aria-hidden="true"style="font-size: 30px;position:relative;top:150px;"></i>
+            <h2 style="display: inline; margin-left: 5px;position:relative;top:150px;">HOME</h2>
+        </a>
+        <P><a class="links" href="{% url 'rbinewhome' %}">   Probe Agile Data</a></p>
+            <span><a class="links" href="{% url 'table_details2' %}"> Market Data  </a></span>
+        <p class="logo"><span>Data sources</span></p>
+        <hr>
+        {% for table_name in table_names %}
+        <a href="{% url 'table_details' table_name %}?table_names={{ table_names|join:',' }}"
+        class="table-link"><i class="fa fa-list icons">&nbsp;{{ table_name }} </i></a>
+        {% endfor %}
+    </div>
+   </div>
+
+
+           
+        <div class="two">
+            <div class="col-div-6">
+                <span style="font-size:30px;cursor:pointer; color: #f7403b;" class="nav">  Data Extraction Status for Market Data Sources </span>
+            </div>
+        </div>  
+          
+       
+    <div class="three">
+            <div class="box">
+                        <div class="headtext">{{ table_name }} </div>
+                        <div class="aligned">Start date : <span id="start_date_display">{{ start_date|date:"d-m-Y" }}</span> | End date : <span id="end_date_display">{{ end_date|date:"d-m-Y" }}</span> </div>
+                        <div class="dropdown" style="text-align: right;" >
+                            <select class="listview" name="time_range" id="time_range_select" onchange="toggleDateInputs();updateDownloadLink();" style= "width:250px;">
+                                <option value="7" {% if time_range == '7' %}selected{% endif %}>Past 7 Days</option>
+                                <option value="15" {% if time_range == '15' %}selected{% endif %}>Past 15 Days</option>
+                                <option value="30" {% if time_range == '30' %}selected{% endif %}>Past 30 Days</option>
+                                <option value="custom" {% if time_range == 'custom' %}selected{% endif %}>Custom view</option>
+                            </select>                            
+                        <form id="date_range_form" method="GET" action="" style="display:none;">
+                            <label for="from_date"></label>
+                            <input type="date" name="from_date" id="from_date" value="{{ from_date }}">
+                            <label for="to_date"></label>
+                            <input type="date" name="to_date" id="to_date" value="{{ to_date }}">
+                        </form>
+                        <button type="button" onclick="setDefaultDates(); submitForm();updateDownloadLink();"style="margin-left: 10px;">Apply</button>
+                        <div class="excellink"><a id="download_excel_link" href="?download_excel=1{% if time_range == 'custom' %}&from_date={{ from_date }}&to_date={{ to_date }}{% endif %}">
+                            Download Excel
+                        </a></div>
+                        <div id="date_range_error"></div>
+                    </div>
+                </div>
+        </div>
+        
+   
+        <div class="four">
+                <div class="content-box">
+                    <title>{{ table_name }} Details</title>
+                    <!-- Display data if structured_data exists -->
+                    {% if structured_data %}
+                        <div class="card">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Status</th>
+                                        <th># Records Available</th>
+                                        <th># Records Scraped</th>
+                                        <th>Failure Reason</th>
+                                        <th>Trade Date</th>
+                                        <th>Scraped Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for entry in structured_data %}
+                                        <tr>
+                                            <td style="padding: 5px;"> <span style="color: {% if entry.status|lower == 'success' %}green{% elif entry.status == 'failure' and table_name in amber_table_names %}orange{% else %}red{% endif %}">
+                                                {% if entry.data %}
+                                                    {{ entry.data.status|default:'-' }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </span>
+                                            </td>
+                                            <td>
+                                                {% if entry.data %}
+                                                    {{ entry.data.no_of_data_available|default:'-' }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                            <td style="padding: 5px;"> <span style="color: {% if entry.status|lower == 'success' %}green{% elif entry.status == 'failure' and table_name in amber_table_names %}orange{% else %}red{% endif %}">
+                                                {% if entry.data %}
+                                                    {{ entry.data.no_of_data_scraped|default:'-' }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </span>
+                                            </td>
+                                            <td style="padding: 5px;"> <span style="color: {% if entry.status|lower == 'success' %}green{% elif entry.status == 'failure' and table_name in amber_table_names %}orange{% else %}red{% endif %}">
+                                                {% if entry.data  %}
+                                                    {{ entry.data.reason|default:'-' }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </span>
+                                            </td>
+                                            <td>{{ entry.trade_date|date:"d-m-Y"|default:'-' }}</td>
+                                            <td>
+                                                {% if entry.data and entry.data.Scraped_on %}
+                                                    {{ entry.data.Scraped_on|date:"d-m-Y"|default:'-' }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+       
+        
+
+
+         <div class="five">
+            <div class="col-div-4" style="text-align:center;">
+                <div style="text-align: center;">
+				<p style="color: red;font-size:21px;"> Contact us for support : <a href="mailto:agiledatahelp@gmail.com" target="_blank" rel="noopener noreferrer" style="color: red;font-size:21px;">agiledatahelp@gmail.com</a></p>
+			</div>
+		</div>
+    </div>
+    <script>
+        $(document).ready(function () {
+            // Set the default time range to "Last 7 Days"
+            $("#time_range_select").val('7');
+        
+            // Call the function to toggle date inputs based on the default selection
+            toggleDateInputs();
+        
+            // Call the function to set default dates based on the default time range
+            setDefaultDates();
+
+            highlightSelectedTable();
+        });
+        function updateDateDisplay() {
+            var startDateDisplay = document.getElementById('start_date_display');
+            var endDateDisplay = document.getElementById('end_date_display');
+    
+            var fromInput = document.getElementById('from_date');
+            var toInput = document.getElementById('to_date');
+    
+            startDateDisplay.innerText = fromInput.value;
+            endDateDisplay.innerText = toInput.value;
+        }
+    
+        function toggleDateInputs() {
+            var timeRangeSelect = document.getElementById('time_range_select');
+            var dateRangeForm = document.getElementById('date_range_form');
+            var fromInput = document.getElementById('from_date');
+            var toInput = document.getElementById('to_date');
+    
+            // Toggle the visibility of the date range inputs based on the selected option
+            dateRangeForm.style.display = (timeRangeSelect.value === 'custom') ? 'inline-block' : 'none';
+            fromInput.required = (timeRangeSelect.value === 'custom');
+            toInput.required = (timeRangeSelect.value === 'custom');
+            if (timeRangeSelect.value === 'custom') {
+                setDefaultDates();
+                updateDateDisplay();
+            }
+        }
+    
+        // Function to set the from_date and to_date values based on the selected time range
+        function setDefaultDates() {
+            var timeRangeSelect = document.getElementById('time_range_select');
+            var fromInput = document.getElementById('from_date');
+            var toInput = document.getElementById('to_date');
+    
+            var yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            var yesterdayISOString = yesterday.toISOString().split('T')[0];
+
+            if (timeRangeSelect.value === '7') {
+                // Set the from_date to 7 days ago and to_date to yesterday
+                setDatesWithLimit(yesterdayISOString, 7, fromInput, toInput);
+            } else if (timeRangeSelect.value === '15') {
+                // Set the from_date to 15 days ago and to_date to yesterday
+                setDatesWithLimit(yesterdayISOString, 15, fromInput, toInput);
+            } else if (timeRangeSelect.value === '30') {
+                // Set the from_date to 30 days ago and to_date to yesterday
+                setDatesWithLimit(yesterdayISOString, 30, fromInput, toInput);
+            }
+            }   
+            function setDatesWithLimit(today, daysAgo, fromInput, toInput) {
+                var fromDate = new Date();
+                fromDate.setDate(fromDate.getDate() - daysAgo);
+                fromInput.value = fromDate.toISOString().split('T')[0];
+                toInput.value = today;
+            }
+    
+            function validateDateRange() {
+                var fromInput = document.getElementById('from_date');
+                var toInput = document.getElementById('to_date');
+                var errorMessage = document.getElementById('date_range_error');
+            
+                var fromDate = new Date(fromInput.value);
+                var toDate = new Date(toInput.value);
+            
+                var sixtyDaysAgo = new Date();
+                sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+            
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+            
+                if (fromDate > toDate) {
+                    errorMessage.innerHTML = 'Invalid date range: "From" date should be before "To" date.';
+                    errorMessage.style.color = 'red';
+                    errorMessage.style.fontWeight = 'bold';
+                    errorMessage.style.marginTop = '90px';
+                    errorMessage.style.marginLeft = '-150px';
+                    errorMessage.style.whiteSpace = 'nowrap';
+                    errorMessage.style.textAlign = 'center';
+                    return false;
+                }
+            
+                if (fromDate < sixtyDaysAgo) {
+                    errorMessage.innerHTML = 'Date range for custom view cannot be earlier than 60 days.';
+                    errorMessage.style.color = 'red';
+                    errorMessage.style.fontWeight = 'bold';
+                    errorMessage.style.marginTop = '90px';
+                    errorMessage.style.marginLeft = '-150px';
+                    errorMessage.style.whiteSpace = 'nowrap';
+                    errorMessage.style.textAlign = 'center';
+                    return false;
+                }
+            
+                if (toDate > tomorrow) {
+                    errorMessage.innerHTML = 'Invalid date: "To" date cannot be later than tomorrow.';
+                    errorMessage.style.color = 'red';
+                    errorMessage.style.fontWeight = 'bold';
+                    errorMessage.style.marginTop = '90px';
+                    errorMessage.style.marginLeft = '-150px';
+                    errorMessage.style.whiteSpace = 'nowrap';
+                    errorMessage.style.textAlign = 'center';
+                    return false;
+                }
+            
+                errorMessage.innerHTML = '';
+                return true;
+            }
+    
+        function submitForm() {
+            if (validateDateRange()) {
+                // Use AJAX to submit the form asynchronously
+                $.ajax({
+                    url: $('#date_range_form').attr('action'),
+                    type: 'GET',
+                    data: $('#date_range_form').serialize(),
+                    success: function(response) {
+                        // Update the content of the page with the response
+                        // This assumes that your server returns the updated content
+                        // You might need to adjust this based on your server response
+                        $('.content-box').html($(response).find('.content-box').html());
+                    },
+                    error: function(error) {
+                        console.error('Error submitting form:', error);
+                    }
+                });
+                updateDateDisplay();
+            }
+        }
+        function highlightSelectedTable() {
+            var selectedTable = "{{ table_name }}";  // Assuming table_name is defined in your Django context
+            var tableLinks = document.querySelectorAll('.table-link');
+    
+            tableLinks.forEach(function (link) {
+                if (link.textContent.trim() === selectedTable) {
+                    link.classList.add('highlight');
+                // Apply styles directly
+                link.style.backgroundColor = 'greenyellow';
+                link.style.fontWeight = 'bold';
+                // Add any other styles you want to apply
+            }
+        });
+    }
+    function updateDownloadLink() {
+        var timeRange = document.getElementById("time_range_select").value;
+        var fromDate = document.getElementById("from_date").value;
+        var toDate = document.getElementById("to_date").value;
+
+        var downloadLink = document.getElementById("download_excel_link");
+        downloadLink.href = `?download_excel=1&time_range=${timeRange}&from_date=${fromDate}&to_date=${toDate}`;
+    }
+    </script>
+</body>
+</html>

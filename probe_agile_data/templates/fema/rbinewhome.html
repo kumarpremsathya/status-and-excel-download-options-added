@@ -1,0 +1,207 @@
+{% load static %}
+
+<!Doctype HTML>
+	<html>
+	<head>
+		
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+		{% comment %} <link rel="stylesheet" href="css/style.css" type="text/css"/> {% endcomment %}
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <script type="text/javascript" src="{% static 'js/script.js' %}"></script>
+	</head>
+    <style>
+       
+	  </style>
+
+	<body>
+		
+	<div id="mySidenav" class="sidenav">
+		<div class="Home" >
+			{% comment %} <img src="{% static 'image/home.png' %}"class="home-img"> {% endcomment %}
+			 <a href="{% url 'table_details2' %}"><i class="fa fa-home aria-hidden="true"></i> HOME</a> 
+			<P><a class="links" href="{% url 'rbinewhome' %}">   Probe Agile Data</a></p>
+			 <span><a class="links" href="{% url 'table_details2' %}"> Market Data  </a></span> 
+		
+		</div>
+	
+		<p class="Datas">Data Sources<hr class="Datas-1" style="color:red;">
+			<a href="{% url 'rbinewfema_datefilter' %}" class="icon-a" ><i class="fa fa-list icons"></i>  RBI_Fema</a>
+			<a href="{% url 'rbinewecb_datefilter' %}" class="icon-a" ><i class="fa fa-list icons"></i>   RBI_Ecb</a>
+			<a href="{% url 'rbinewodi_datefilter' %}" class="icon-a" ><i class="fa fa-list icons"></i>   RBI_Odi</a>
+
+	</div>
+	<div id="main">
+
+		<div class="head">
+			<div class="col-div-6">
+	            <span > Data Extraction Status for Probe Agile Data Sources</span>
+
+	        </div>
+	
+		<div class="clearfix"></div>
+	</div>
+
+		<div class="clearfix"></div>
+		<br/>
+		
+		
+		<div class="col-div-3">
+			<div class="box" style="text-align:center; height:70px" >
+			
+				<p>Metrics from  &nbsp;"{{ data_list.0.Date }}" to  "{{ data_list.6.Date }}"</p> 
+				{% comment %} <p>88<span>Projects</span></p> {% endcomment %}
+				
+			</div>
+		</div>
+	
+	
+		<div class="clearfix"></div>
+		<br/><br/>
+		<div class="col-div-8">
+			<div class="box-8">
+			<div class="content-box">
+				<p></p>
+				<br/>
+				<table style="width:100%;">
+					<tr>
+						<th>Data Source</th>
+						<th> #Records </th>
+						{% for row in data_list %}
+							<th colspan="2" >{{ row.Date }}</th>
+						{% endfor %}
+					</tr>
+					<tr> 
+						<td> </td>
+		                <td> </td>
+						{% for row in data_list %}
+							<td style="color:#6408f7;">Available</td>
+							<td style="color:#6408f7;">Scraped</td>
+						{% endfor %}
+					</tr>
+					<tr>
+						<td style="text-align:left;"><a href="#" onclick="openPopup('rbi_fema');">RBI Fema</a></td>
+						<td style="color:#6408f7;">{{ fema_latest_count}}</td>
+						{% for row in data_list %}
+							<td>{{ row.FEMA_Data_Available }}</td>
+							<td class="{{ row.FEMA_Color }}">{{ row.FEMA_Data_Scraped }}</td>
+						{% endfor %}
+					</tr>
+					<tr>
+						<td style="text-align:left;"><a href="#" onclick="openPopup('rbi_ecb');">RBI Ecb</a></td>
+						<td style="color:#6408f7;"> {{ ecb_latest_count}}</td>
+						{% for row in data_list %}
+							<td >{{ row.ECB_Data_Available }}</td>
+							<td class="{{ row.ECB_Color }}">{{ row.ECB_Data_Scraped }}</td>
+						{% endfor %}
+					</tr>	
+					<tr>
+						<td style="text-align:left;"><a href="#" onclick="openPopup('rbi_odi');">RBI Odi</a></td>
+						<td style="color:#6408f7;">{{ odi_latest_count }}</td>
+						{% for row in data_list %}
+							<td >{{ row.ODI_Data_Available }}</td>
+							<td class="{{ row.ODI_Color }}">{{ row.ODI_Data_Scraped }}</td>
+						{% endfor %}
+					</tr>	
+					<tr>
+						<td style="text-align:left;"><a href="#" onclick="openPopup('rbi_fema');">RBI Fema</a></td>
+						<td style="color:#6408f7;">{{ startupindia_latest_count }}</td>
+						{% for row in data_list %}
+							<td>{{ row.STARTUPINDIA_Data_Available }}</td>
+							<td class="{{ row.STARTUPINDIA_Color }}">{{ row.STARTUPINDIA_Data_Scraped }}</td>
+						{% endfor %}
+					</tr>
+			</table>
+		
+			</div>
+		</div>
+		</div>
+
+		<div class="clearfix"></div>
+	</div>
+    
+	<div class="col-div-4">
+		<div class="box" style="text-align:center;">
+			<p style="color: #f7403b;">Contact us for support : <a href="mailto:agiledatahelp@gmail.com"
+				style="color: #f7403b;"> agiledatahelp@gmail.com</a></p>
+		</div> 
+	</div>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+	<!-- Load the script containing openPopup function first -->
+    <script src="{% static 'path/to/script.js' %}"></script>
+	<script>
+
+
+ 
+     //Add this script to show the popup on clicking the source_name link in table 
+
+	 function openPopup(source_name) {
+		$.ajax({
+			url: `/rbiget_data_for_popup1/${source_name}/`,
+			method: 'GET',
+			success: function (data) {
+				var popupContent = `
+					<div class="popup-container">
+						<span class="close-btn" onclick="closePopup()">X</span>
+						<p class="popup-info">Data Source: <span class="popup-style">${data.source_name}</span></p>
+						<p class="popup-info">Status: <span class="status-text">${data.script_status}</span></p>
+						<p class="popup-info">#Records Scraped: <span class="popup-style">${data.data_scraped}</span></p>
+						<p class="popup-info">Failure Reason: <span class="popup-style">${data.failure_reason}</span></p>
+						<p class="popup-info">Scraped On: <span class="popup-style">${data.date_of_scraping}</span></p>
+					</div>
+				`;
+				$('body').append(popupContent);
+	
+				// Add class to status text based on the status ,adding the color to status in popup window.
+				var statusElement = document.querySelector('.status-text');
+				if (data.script_status.toLowerCase() === 'success') {
+					statusElement.classList.add('green');
+				} else if (data.script_status.toLowerCase() === 'failure'&& data.failure_reason.includes('204')) {
+					statusElement.classList.add('orange');
+				} else if (data.script_status.toLowerCase() === 'failure') {
+					statusElement.classList.add('red');
+				}
+	
+				$('.popup-container').fadeIn();
+			},
+			error: function (xhr, status, error) {
+				alert('Data not available for today.');
+			}
+		});
+	}
+	
+	function closePopup() {
+		$('.popup-container').fadeOut(function () {
+			$(this).remove();
+		});
+	}
+    
+	
+    // Highlighting the anchor tag links when we clicked with background colour greenyellow
+
+	function highlightSelectedTable() {
+		var selectedTable = "{{ table_name_filter }}";  // Assuming table_name is defined in your Django context
+		var tableLinks = document.querySelectorAll('[data-source]');
+	
+		tableLinks.forEach(function (link) {
+			if (link.getAttribute('data-source') === selectedTable) {
+				link.classList.add('highlight');
+				// Apply styles directly
+				link.style.backgroundColor = 'greenyellow';
+				link.style.fontWeight = 'bold';
+				// Add any other styles you want to apply
+			}
+		});
+	}
+	
+	// Call the function to highlight the selected table on page load
+	highlightSelectedTable();
+
+
+ </script>
+
+</body>
+
+</html>

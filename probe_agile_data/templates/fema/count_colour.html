@@ -1,0 +1,215 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible"content="IE=edge">
+	<meta name="viewport"content="width=device-width, initial-scale=1.0">
+	<title>Probe Agile data</title>
+	<link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+    {% comment %} <link rel="stylesheet" href="{% static 'css/responsive.css' %}">  {% endcomment %}
+	<script type="text/javascript" src="{% static 'js/script.js' %}"></script>
+
+</head>
+<body>
+
+	<!-- for header part -->
+	<header>
+
+		<div>
+			
+			<div class="Home" ><img src="{% static 'image/home.png' %}"class="home-img">
+				<a href="{% url 'count_colour' %}">HOME</a></div>
+
+		</div>
+
+		<div class="logosec">
+			<div class="logo">Data Extraction Status for Probe Agile Data Sources</div>
+
+		</div>
+
+	</header>
+
+	<div class="main-container">
+		<div class="navcontainer">
+			<nav class="nav">
+				<div class="nav-upper-options">
+					<div class="nav-option option1">
+						<img src="https://media.geeksforgeeks.org/wp-content/uploads/20221210182148/Untitled-design-(29).png"
+							class="nav-img"alt="dashboard">
+						<h3>Dash Board </h3>
+					</div>
+					<br>
+	                
+
+					<div class="option2 nav-option" >
+						
+        
+						<a href="{% url 'fema_datefilter' %}"><h3 >Fema </h3></a>
+							
+					</div>
+
+					<div class="nav-option option2" >
+		
+							<a href="{% url 'startup_datefilter' %}"><h3 >Startup_India </h3></a>
+					</div>
+
+					<div class="nav-option option2" >
+						 
+							<a href="#"><h3>Sample Data</h3></a>
+						
+					</div>
+
+					<div class="nav-option option2" >
+						
+							<a href="#"><h3> Sample Data</h3></a>
+						
+					</div>
+
+					<div class="nav-option option6">
+						
+					
+					</div>
+
+					<div class="nav-option logout">
+						
+					</div>
+
+				</div>
+				
+			</nav>
+		</div>
+		<div class="main">
+
+			<div class="box-container">
+
+				<div class="box box1 box_1" >
+					<div class="text">
+						<center> 
+                         <h3>Metric from  &nbsp;&nbsp;&nbsp;"{{ data_list.0.Date }}" &nbsp;&nbsp;&nbsp; to &nbsp;&nbsp;&nbsp; "{{ data_list.6.Date }}"</h3>
+						</center>
+                    </div>
+                </div>
+			</div>
+
+			<div class="report-container">
+				<div class="report-header">
+					<h1 class="recent-Articles" style="text-align: center;">Metric Report</h1>
+					<!-- <button class="view">View All</button> -->
+				</div>
+
+				<div class="report-body">
+
+					<div class="items">
+							<table style="width:100%;">
+								<tr>
+									<th>Table Name</th>
+									{% for row in data_list %}
+										<th>{{ row.Date }}</th>
+									{% endfor %}
+								</tr>
+								<tr>
+									<td><a href="#" onclick="openPopup('fema');">fema</a></td>
+									{% for row in data_list %}	  
+										   <td class="{{ row.FEMA_Color }}">{{ row.FEMA_Count }}</td>
+									{% endfor %}	
+								</tr>
+								<tr>
+									<td><a href="#" onclick="openPopup('startup india');">Startup India</a></td>
+									{% for row in data_list %}
+									     <td class="{{ row.Startup_India_Color }}">{{ row.Startup_India_Count }}</td>
+									{% endfor %}
+								</tr>
+								<tr>
+									<td><a href="#" >Sample data</a></td>
+									<td>344</td>
+									<td>789</td>
+									<td>678</td>
+									<td>45</td>
+									<td>0</td>
+									<td>865</td>
+									<td>0</td>
+									
+							    </tr>
+								<tr>
+									<td><a href="#" >Sample data</a></td>
+									<td>344</td>
+									<td>789</td>
+									<td>678</td>
+									<td>45</td>
+									<td>0</td>
+									<td>865</td>
+									<td>0</td>
+								<tr>
+									<td><a href="#" >Sample data</a></td>
+									<td>344</td>
+									<td>789</td>
+									<td>678</td>
+									<td>45</td>
+									<td>0</td>
+									<td>865</td>
+									<td>0</td>
+							    </tr>
+								<tr>
+									<td><a href="#" >Sample data</a></td>
+									<td>344</td>
+									<td>789</td>
+									<td>678</td>
+									<td>45</td>
+									<td>0</td>
+									<td>865</td>
+									<td>0</td>
+							    </tr>
+						</table>
+					
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	
+
+	<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script>
+        function openPopup(table_name) {
+            $.ajax({
+                url: `/fema/get_data_for_popup/${table_name}/`,
+                method: 'GET',
+                success: function(data) {
+                    var popupContent = `
+                        <div class="popup-container">
+                            <span class="close-btn" onclick="closePopup()">X</span>
+                            <p>Table Name:   ${data.table_name}</p>
+                            <p>Status:      ${data.status}</p>
+                            <p>Data Scraped: ${data.data_scraped}</p>
+                            <p>Reason:       ${data.reason}</p>
+                            <p>Scraped On:  ${data.scraped_at}</p>
+                        </div>
+                    `;
+                    $('body').append(popupContent);
+                    $('.popup-container').fadeIn();
+                },
+                error: function(xhr, status, error) {
+                    alert('Data not available for today.');
+                }
+            });
+        }
+
+        function closePopup() {
+            $('.popup-container').fadeOut(function() {
+                $(this).remove();
+            });
+        }
+    </script>
+
+	
+<footer>
+	<p>If any queries contact us : &nbsp;&nbsp;&nbsp;<a href="mailto:probepoc2023@gmail.com"
+		 style="color:white"> probepoc2023@gmail.com</a></p>
+</footer>
+</body>
+</html>

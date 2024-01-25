@@ -1,0 +1,172 @@
+{% load static %}
+
+<!Doctype HTML>
+	<html>
+	<head>
+		<title></title>
+        <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+		{% comment %} <link rel="stylesheet" href="css/style.css" type="text/css"/> {% endcomment %}
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+        <script type="text/javascript" src="{% static 'js/script.js' %}"></script>
+	</head>
+
+
+	<body>
+		
+	<div id="mySidenav" class="sidenav">
+		<div class="Home" >
+			{% comment %} <img src="{% static 'image/home.png' %}"class="home-img"> {% endcomment %}
+{% comment %} 
+			<a href="{% url '#' %}"><i class="fa fa-home aria-hidden="true"></i> HOME</a> {% endcomment %}
+			<P><a class="links" href="{% url 'newhome' %}">   Probe Agile Data</a></p>
+			{% comment %} <span><a class="links" href="{% url '#' %}"> Market Data  </a></span> {% endcomment %}
+		</div>
+	
+		<p class="Datas">Data Sources<hr class="Datas-1" style="color:red;">
+		<a href="{% url 'newfema_datefilter' %}" class="icon-a"><i class="fa fa-list icons"></i>   Fema</a>
+		<a href="{% url 'newstartup_datefilter' %}" class="icon-a"><i class="fa fa-list icons"></i>   Startup_india</a>
+		<a href="#"class="icon-a"><i class="fa fa-list icons"></i> RBI_odi</a>
+		<a href="#"class="icon-a"><i class="fa fa-list icons"></i> RBI_ecb</a>
+		
+	</div>
+	<div id="main">
+
+		<div class="head">
+			<div class="col-div-6">
+	            <span > Data Extraction Status for Probe Agile Data Sources</span>
+
+	        </div>
+	
+		<div class="clearfix"></div>
+	</div>
+
+		<div class="clearfix"></div>
+		<br/>
+		
+		
+		<div class="col-div-3">
+			<div class="box" style="text-align:center; height:70px" >
+			
+				<p>Metrics from  &nbsp;"{{ data_list.0.Date }}" to  "{{ data_list.6.Date }}"</p> 
+				{% comment %} <p>88<span>Projects</span></p> {% endcomment %}
+				
+			</div>
+		</div>
+	
+	
+		<div class="clearfix"></div>
+		<br/><br/>
+		<div class="col-div-8">
+			<div class="box-8">
+			<div class="content-box">
+				<p></p>
+				<br/>
+				<table style="width:100%;">
+					<tr>
+						<th>Data Source</th>
+						{% for row in data_list %}
+							<th>{{ row.Date }}</th>
+						{% endfor %}
+					</tr>
+					<tr>
+						<td style="text-align:left;"><a href="#" onclick="openPopup('rbi_fema');">RBI_Fema</a></td>
+						{% for row in data_list %}	  
+							   <td class="{{ row.rbi_fema_color }}">{{ row.rbi_fema_count }}</td>
+						{% endfor %}	
+					</tr>
+					<tr>
+						<td style="text-align:left;"><a href="#" onclick="openPopup('rbi_ecb');">RBI_Ecb</a></td>
+						{% for row in data_list %}
+							 <td class="{{ row.rbi_ecb_color}}">{{ row.rbi_ecb_Count }}</td>
+						{% endfor %}
+					</tr>
+					
+					
+			</table>
+		
+			</div>
+		</div>
+		</div>
+
+		<div class="clearfix"></div>
+	</div>
+    
+	<div class="col-div-4">
+		<div class="box" style="text-align:center;">
+			<p style="color: #f7403b;">Contact us for support : <a href="agiledatahelp@gmail.com"
+				style="color: #f7403b;"> agiledatahelp@gmail.com</a></p>
+		</div> 
+	</div>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+	<script>
+
+	  $(".nav").click(function(){
+	    $("#mySidenav").css('width','70px');
+	    $("#main").css('margin-left','70px');
+	    $(".logo").css('visibility', 'hidden');
+	    $(".logo span").css('visibility', 'visible');
+	     $(".logo span").css('margin-left', '-10px');
+	     $(".icon-a").css('visibility', 'hidden');
+	     $(".icons").css('visibility', 'visible');
+	     $(".icons").css('margin-left', '-8px');
+	      $(".nav").css('display','none');
+	      $(".nav2").css('display','block');
+	  });
+
+	$(".nav2").click(function(){
+	    $("#mySidenav").css('width','300px');
+	    $("#main").css('margin-left','300px');
+	    $(".logo").css('visibility', 'visible');
+	     $(".icon-a").css('visibility', 'visible');
+	     $(".icons").css('visibility', 'visible');
+	     $(".nav").css('display','block');
+	      $(".nav2").css('display','none');
+	 });
+    
+	 function openPopup(table_name) {
+		$.ajax({
+			url: `/get_data_for_popup1/${table_name}/`,
+			method: 'GET',
+			success: function(data) {
+				var popupContent = `
+					<div class="popup-container">
+						<span class="close-btn" onclick="closePopup()">X</span>
+						<p class="popup-info">Data Source  :  <span class="popup-style"> ${data.source_name}</span></p>
+						<p class="popup-info">Status  : <span class="status-text">  ${data.script_status}</span></p>
+						<p class="popup-info">#Records Scraped  : <span class="popup-style" >${data.data_scraped}</span></p>
+						<p class="popup-info">Failure Reason  :  <span class="popup-style">${data.failure_reason}</span></p>
+						<p class="popup-info">Scraped On  : <span class="popup-style"> ${data.date_of_scraping}</span></p>
+					</div>
+				`;
+				$('body').append(popupContent);
+
+				// Add class to status text based on the status ,adding the color to status in popup window.
+				var statusElement = document.querySelector('.status-text');
+				if (data.status.toLowerCase() === 'success') {
+					statusElement.classList.add('green');
+				} else if (data.status.toLowerCase() === 'failure'&& data.reason.includes('204')) {
+					statusElement.classList.add('orange');
+				} else if (data.status.toLowerCase() === 'failure') {
+					statusElement.classList.add('red');
+				}
+	
+				$('.popup-container').fadeIn();
+			},
+			error: function(xhr, status, error) {
+				alert('Data not available for today.');
+			}
+		});
+	}
+
+	function closePopup() {
+		$('.popup-container').fadeOut(function() {
+			$(this).remove();
+		});
+	}
+	</script>
+
+	</body>
+
+</html>

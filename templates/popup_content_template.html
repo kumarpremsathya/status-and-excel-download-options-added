@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popup Content</title>
+    <link rel="stylesheet" href="{% static './stylesheet.css' %}" type="text/css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="{% static 'script.js' %}"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
+</head>
+<body>
+    <div id="overlay" class="overlay" onclick="closePopup()">
+        <div id="popup" class="popup">
+        <p>Table Name: {{ table_name }}</p>
+        <p>Status: {{ entry.status }}</p>
+        <p>No of Data Scraped: {{ entry.no_of_data_scraped }}</p>
+        <p>Reason: {{ entry.reason }}</p>
+        <p>Trade Date: {{ entry.trade_date }}</p>
+        <p>Scraped_on: {{ entry.Scraped_on|date:"Y-m-d" }}</p>
+        <button class="closePopup">Close</button>
+    </div>
+</div>
+</body>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+function openPopup() {
+    var overlay = document.getElementById("overlay");
+    var popup = document.getElementById("popup");
+
+    overlay.style.display = "flex";
+    popup.style.display = "block";
+}
+
+function closePopup() {
+    var overlay = document.getElementById("overlay");
+    var popup = document.getElementById("popup");
+
+    overlay.style.display = "none";
+    popup.style.display = "none";
+}
+$(document).ready(function () {
+    $(".closePopup").click(function () {
+        closePopup();
+    });
+});
+</script>
+</html>
