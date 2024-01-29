@@ -20,7 +20,7 @@ from .forms import DateRangeForm
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import ValidationError
 from django import forms
-
+from django.db import models
 
 import pandas as pd
 from openpyxl import Workbook
@@ -28,9 +28,10 @@ from openpyxl.styles import Font
 import configparser
 import os
 from django.shortcuts import render
-from .config_reader import read_config
 import sys
-import os
+
+
+from django.db.models import F
 
 # Add the directory containing probe_agile_data to the Python path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
@@ -39,10 +40,23 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 
 
+def get_status_from_config(source_name):
+    config_path = get_config_path(source_name)
+    config = configparser.ConfigParser()
+    config.read(config_path)
+    return config.get(source_name, 'status')
+
+def get_config_path(source_name):
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    config_folder = os.path.join(base_dir, 'config')
+    config_file = f'config_{source_name.lower()}.ini'
+    return os.path.join(config_folder, config_file)
 
 
-
-
+# Function to get a unique Sr_no value
+def get_unique_sr_no():
+    max_sr_no = rbi_log.objects.using('rbi').aggregate(models.Max('Sr_no'))['Sr_no__max']
+    return max_sr_no + 1 if max_sr_no is not None else 1
 
 def rbinewhome(request):
     # Get the current date and the date 6 days ago
@@ -174,32 +188,89 @@ def rbinewhome(request):
             'STARTUPINDIA_Color':startupindia_color,
         })
     
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-    # Construct the path to config.ini
-    config_path = os.path.join(base_dir, 'config.ini')
-
-    # Read status from config.ini
-    config = configparser.ConfigParser()
-    config.read(config_path)
     
-    fema_status = config.get('rbi_fema', 'status')
-    ecb_status = config.get('rbi_ecb', 'status')
-    odi_status = config.get('rbi_odi', 'status')
-    startupindia_status = config.get('startupindia', 'status')
     
-     # Map status to colors
+    fema_status = get_status_from_config('rbi_fema')
+    ecb_status = get_status_from_config('rbi_ecb')
+    odi_status = get_status_from_config('rbi_odi')
+    startupindia_status = get_status_from_config('startupindia')
+
     status_color_mapping = {
         'Active': 'green',
         'Hibernated': 'orange',
         'Inactive': 'red',
     }
 
-    # Get corresponding colors for each status
     fema_status_color = status_color_mapping.get(fema_status, '')
     ecb_status_color = status_color_mapping.get(ecb_status, '')
     odi_status_color = status_color_mapping.get(odi_status, '')
     startupindia_status_color = status_color_mapping.get(startupindia_status, '')
+    
+    unique_sr_no = get_unique_sr_no() 
+    
+    
+    # rbi_log.objects.using('rbi').filter(source_name='rbi_fema').update_or_create(defaults={'source_status': fema_status, 'Sr_no': unique_sr_no})
+    # rbi_log.objects.using('rbi').filter(source_name='rbi_ecb').update_or_create(defaults={'source_status': ecb_status, 'Sr_no': unique_sr_no})
+    # rbi_log.objects.using('rbi').filter(source_name='rbi_odi').update_or_create(defaults={'source_status': odi_status, 'Sr_no': unique_sr_no})
+    # rbi_log.objects.using('rbi').filter(source_name='startupindia').update_or_create(defaults={'source_status': startupindia_status, 'Sr_no': unique_sr_no})
+    
+         
+    # Update or create for rbi_fema
+    rbi_fema_entry, created = rbi_log.objects.using('rbi').filter(source_name='rbi_fema', Sr_no=unique_sr_no ).update_or_create(source_name='rbi_fema', Sr_no=unique_sr_no,  defaults={'source_status': fema_status} )
+
+    # If entry is not created, update the Sr_no
+    if not created:
+        rbi_fema_entry.Sr_no = unique_sr_no
+        rbi_fema_entry.save()
+    
+    
+    # Get a new unique Sr_no for the next update or create operation
+    unique_sr_no = get_unique_sr_no()
+        
+    # Update or create for rbi_ecb
+    rbi_ecb_entry,created = rbi_log.objects.using('rbi').filter(source_name='rbi_ecb', Sr_no=unique_sr_no ).update_or_create(source_name='rbi_ecb',  Sr_no=unique_sr_no, defaults={'source_status': ecb_status})
+
+    # If entry is not created, update the Sr_no
+    if not created:
+        rbi_ecb_entry.Sr_no = unique_sr_no()
+        rbi_ecb_entry.save()
+        
+        
+    # Get a new unique Sr_no for the next update or create operation
+    unique_sr_no = get_unique_sr_no()
+
+    # Update or create for rbi_odi
+    rbi_odi_entry, created= rbi_log.objects.using('rbi').filter(source_name='rbi_odi', Sr_no=unique_sr_no ).update_or_create(source_name='rbi_odi', Sr_no=unique_sr_no,  defaults={'source_status': odi_status})
+
+
+    # If entry is not created, update the Sr_no
+    if not created:
+        rbi_odi_entry.Sr_no = unique_sr_no()
+        rbi_odi_entry.save()
+    
+    
+    # Get a new unique Sr_no for the next update or create operation
+    unique_sr_no = get_unique_sr_no()
+    
+    # Update or create for startupindia
+    startupindia_entry, created = rbi_log.objects.using('rbi').filter(source_name='startupindia', Sr_no=unique_sr_no ).update_or_create(source_name='startupindia', Sr_no=unique_sr_no,  defaults={'source_status': startupindia_status})
+
+    # If entry is not created, update the Sr_no
+    if not created:
+        startupindia_entry.Sr_no = unique_sr_no()
+        startupindia_entry.save()
+   
+    
+    # Get a new unique Sr_no for the next update or create operation
+    unique_sr_no = get_unique_sr_no()
+    
+    
+    
+    # rbi_log.objects.using('rbi').filter(source_name='rbi_fema').update_or_create(source_name='rbi_fema', defaults={'source_status': fema_status, 'Sr_no': unique_sr_no})
+    # rbi_log.objects.using('rbi').filter(source_name='rbi_ecb').update_or_create(source_name='rbi_ecb', defaults={'source_status': ecb_status, 'Sr_no': unique_sr_no})
+    # rbi_log.objects.using('rbi').filter(source_name='rbi_odi').update_or_create(source_name='rbi_odi', defaults={'source_status': odi_status, 'Sr_no': unique_sr_no})
+    # rbi_log.objects.using('rbi').filter(source_name='startupindia').update_or_create(source_name='startupindia', defaults={'source_status': startupindia_status, 'Sr_no': unique_sr_no})
+        
     
     # Prepare the context to be passed to the HTML template
     context = {
@@ -258,19 +329,23 @@ def rbiget_data_for_popup1(request, source_name):
 
 ###################################################################################################################################################
 
-def read_config(source_name):
-    # Get the project's base directory
+
+
+
+def get_config_path(source_name):
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    config_folder = os.path.join(base_dir, 'config')
+    config_file = f'config_{source_name.lower()}.ini'
+    return os.path.join(config_folder, config_file)
 
-    # Construct the path to config.ini
-    config_path = os.path.join(base_dir, 'config.ini')
 
-    # Read status from config.ini
+def read_config(source_name):
+    config_path = get_config_path(source_name)
+    
     config = configparser.ConfigParser()
     config.read(config_path)
 
     return config.get(source_name, 'status')
-
 
 
 
